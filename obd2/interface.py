@@ -1,0 +1,82 @@
+import serial
+import time
+from obd2.pids import PID
+
+
+class Obd2Interface:
+    def __init__(self, config):
+        self.port = config.port
+        self.baudrate = config.baudrate
+        self.connection = None
+
+    def connect_elm327(self):
+        """Try to connect to ELM327."""
+        try:
+            self.connection = serial.Serial(self.port, self.baudrate, timeout=1)
+            print(f"Connected to ELM327 at {self.port} with baudrate {self.baudrate}")
+        except serial.SerialException as e:
+            raise ValueError(f"[error]: Failed to connect to ELM327: {e}")
+
+    def disconnect_elm327(self):
+        """Disconnect from ELM327."""
+        try:
+            self.connection.close()
+            print("Disconnected from ELM327")
+        except serial.SerialException as e:
+            raise ValueError(f"[error]: Failed to disconnect from ELM327: {e}")
+
+    def send_elm_command(self, command):
+        """Send command to ELM327 and return response."""
+
+        try:
+            self.connection.write(f"{command}\r".encode("ascii"))
+            time.sleep(0.1)
+            response = ""
+            while True:
+                char = self.connection.read().decode("ascii", errors="ignore")
+                if char == ">":
+                    break
+                response += char
+                if not char and not self.connection.in_waiting:
+                    break
+            clean_response = (
+                response.replace(command, "")
+                .replace("\r", "")
+                .replace("\n", "")
+                .strip()
+            )
+            return clean_response
+        except serial.SerialException as e:
+            raise ValueError(f"[error]: Failed to send command '{command}': {e}")
+        except UnicodeDecodeError as e:
+            raise ValueError(
+                f"[error]: Failed to decode command response: '{command}:{e}'"
+            )
+        except Exception as e:
+            raise ValueError(f"[error]: Unexpected error: {e}")
+
+    def parse_pid_response(self, pid: PID, raw_response: str):
+        """Decode raw response from OBD2 using PID formula."""
+        try:
+            # Remove unused characters and spaces from the raw response
+            data_hex_str = raw_response.strip().replace(" ", "")
+            data_hex_str = data_hex_str[len("41") + 2 :]
+
+            # Convert hexadecimal string to bytes
+            data_bytes = [
+                int(data_hex_str[i : i + 2], 16) for i in range(0, len(data_hex_str), 2)
+            ]
+
+            # Apply the formula to the data bytes to get the final value
+            if pid.bytes == 1:
+                value = pid.formula(data_bytes[0])
+            elif pid.bytes == 2:
+                value = pid.formula(data_bytes[0], data_bytes[1])
+            else:
+                value = None
+
+            return round(value, 2) if value is not None else "N/A"
+        except Exception as e:
+            raise ValueError(
+                f"[error]: Error parsing PID response: {pid.command}, Raw response: {raw_response}, Error: {e} "
+            )
