@@ -1,0 +1,3 @@
+dotenv
+ELM327-emulator
+pyserial
