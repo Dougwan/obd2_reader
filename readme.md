@@ -1,7 +1,7 @@
 ---
 # Emulador de Diagnóstico Veicular Simplificado
 
-Este projeto tem como objetivo principal estabelecer a comunicação com um emulador ELM327 para monitorar dados básicos de um veículo, como rotação do motor (RPM), velocidade e consumo de combustível, utilizando Python. É um ponto de partida simples para quem deseja explorar o diagnóstico veicular sem a complexidade de um sistema de nível industrial.
+### Este projeto tem como objetivo principal estabelecer a comunicação com um emulador ELM327 para monitorar dados básicos de um veículo, como rotação do motor (RPM), velocidade e consumo de combustível, utilizando Python. É um ponto de partida simples para quem deseja explorar o diagnóstico veicular sem a complexidade de um sistema de nível industrial.
 ---
 
 ## 🚀 Primeiros Passos
@@ -24,19 +24,9 @@ Certifique-se de ter o **Python 3.x** instalado em sua máquina.
 
 2.  **Ative o ambiente virtual:**
 
-    - **No macOS/Linux:**
-      ```bash
-      source venv/bin/activate
-      ```
-    - **No Windows (Command Prompt):**
-      ```bash
-      venv\Scripts\activate.bat
-      ```
-    - **No Windows (PowerShell):**
-      `powershell
-    .\venv\Scripts\Activate.ps1
-    `
-      Você saberá que o ambiente está ativo quando `(venv)` aparecer no início da linha de comando do seu terminal.
+     ```bash
+     source venv/bin/activate
+     ```
 
 3.  **Instale as dependências:**
 
@@ -68,7 +58,7 @@ O código Python `main.py` se conectará ao emulador e lerá os dados.
 2.  **Abra um segundo terminal** (diferente do anterior que está rodando o emulador) e, **com o ambiente virtual ativo**, execute o script de monitoramento:
 
     ```bash
-        python monitor_carro.py
+    python main.py
     ```
 
 Seu script Python deverá se conectar ao emulador, enviar os comandos ELM327 para ler os PIDs configurados e exibir os valores simulados para RPM, velocidade e consumo, além de calcular médias durante o período de leitura.
@@ -80,7 +70,7 @@ Seu script Python deverá se conectar ao emulador, enviar os comandos ELM327 par
 ```
 .
 ├── config/
-│   └── settings.py           # Configurações do projeto, como porta serial e baudrate, utilizando dotenv para variáveis de ambiente.
+│   └── settings.py         # Configurações do projeto, como porta serial e baudrate, utilizando dotenv para variáveis de ambiente.
 ├── obd2/
 │   ├── interface.py        # Interface de comunicação com o dispositivo ELM327 via porta serial (envio e leitura de comandos).
 │   ├── pids.py             # Definições de PIDs OBD2 com fórmulas de interpretação dos dados brutos.
