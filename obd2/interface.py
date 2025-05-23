@@ -1,5 +1,6 @@
 import serial
 import time
+import re
 from obd2.pids import PID
 
 
@@ -32,19 +33,22 @@ class Obd2Interface:
             self.connection.write(f"{command}\r".encode("ascii"))
             time.sleep(0.1)
             response = ""
+
             while True:
                 char = self.connection.read().decode("ascii", errors="ignore")
                 if char == ">":
                     break
+
                 response += char
                 if not char and not self.connection.in_waiting:
                     break
-            clean_response = (
-                response.replace(command, "")
-                .replace("\r", "")
-                .replace("\n", "")
-                .strip()
-            )
+
+            clean_response = response.replace(command, "")
+            clean_response = re.sub(r"[\r\n]", "", clean_response)
+            clean_response = re.sub(r"\d+:", "", clean_response)
+            clean_response = re.sub(r"\s+", " ", clean_response)
+            clean_response = clean_response.strip()
+
             return clean_response
         except serial.SerialException as e:
             raise ValueError(f"[error]: Failed to send command '{command}': {e}")
@@ -58,24 +62,22 @@ class Obd2Interface:
     def parse_pid_response(self, pid: PID, raw_response: str):
         """Decode raw response from OBD2 using PID formula."""
         try:
-            # Remove unused characters and spaces from the raw response
-            data_hex_str = raw_response.strip().replace(" ", "")
-            data_hex_str = data_hex_str[len("41") + 2 :]
+            data_hex = raw_response.split(" ")
+            data_hex = data_hex[(len(data_hex) - pid.bytes) :]
+            data_hex_str = "".join(data_hex)
 
             # Convert hexadecimal string to bytes
             data_bytes = [
                 int(data_hex_str[i : i + 2], 16) for i in range(0, len(data_hex_str), 2)
             ]
 
-            # Apply the formula to the data bytes to get the final value
-            if pid.bytes == 1:
-                value = pid.formula(data_bytes[0])
-            elif pid.bytes == 2:
-                value = pid.formula(data_bytes[0], data_bytes[1])
-            else:
+            try:
+                value = pid.formula(*data_bytes)
+            except Exception as e:
+                print(f"Erro ao calcular fórmula do PID {pid}: {e}")
                 value = None
 
-            return round(value, 2) if value is not None else "N/A"
+            return value
         except Exception as e:
             raise ValueError(
                 f"[error]: Error parsing PID response: {pid.command}, Raw response: {raw_response}, Error: {e} "

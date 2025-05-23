@@ -11,7 +11,9 @@ class PID:
 
 
 PIDS = {
-    "RPM": PID("010C", 2, lambda A, B: (256 * A + B) / 4, "RPM"),
-    "Velocidade": PID("010D", 1, lambda A: A, "km/h"),
-    "Consumo_L_h": PID("015E", 2, lambda A, B: (256 * A + B) / 20, "L/h"),
+    "VIN": PID(
+        "0902", 17, lambda *args: bytes(args).decode("ascii"), "Chassi do veículo"
+    ),
+    "RPM": PID("010C", 2, lambda *args: (256 * args[0] + args[1]) / 4, "RPM"),
+    "Velocidade": PID("010D", 1, lambda *args: args[0], "km/h"),
 }

@@ -35,8 +35,9 @@ def start_data_reading(interface: Obd2Interface, read_duration=10):
         for pid_name, pid in PIDS.items():
             try:
                 raw_response = interface.send_elm_command(pid.command)
+                pid_command = str(int(pid.command[:2]) + 40)
 
-                if raw_response and raw_response.startswith("41"):
+                if raw_response and raw_response.startswith(pid_command):
                     value = interface.parse_pid_response(pid, raw_response)
                     print(f"{pid_name}: {value} {pid.unit}")
                     data_log[pid_name].append(value)
@@ -54,8 +55,9 @@ def start_data_reading(interface: Obd2Interface, read_duration=10):
 def data_summary(data_log):
     for pid_name, values in data_log.items():
         if values:
-            avg_value = sum(values) / len(values)
-            print(f"Média de {pid_name}: {round(avg_value, 2)} {PIDS[pid_name].unit}")
+            print(values)
+            # avg_value = sum(values) / len(values)
+            # print(f"Média de {pid_name}: {round(avg_value, 2)} {PIDS[pid_name].unit}")
         else:
             print(f"Nenhum dado coletado para {pid_name}.")
 
